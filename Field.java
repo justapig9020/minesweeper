@@ -36,6 +36,10 @@ public class Field {
         this.blocks[4][3] = new Space();
         this.blocks[4][4] = new Space();
     }
+    public boolean leftclick(int x, int y) {
+        Block block = this.blocks[x][y];
+        return block.leftclick();
+    }
     public void print() {
         for(Block[] i: this.blocks) {
             for(Block j: i) {
@@ -54,16 +58,37 @@ public class Field {
         }
     }
     private abstract class Block {
+        protected boolean visable;
+        public Block() {
+            this.visable = false;
+        }
         abstract public char symbol();
+        abstract public boolean leftclick();
     }
     private class Mine extends Block {
         public char symbol() {
-            return '*';
+            if (this.visable) {
+                return '*';
+            } else {
+                return ' ';
+            }
+        }
+        public boolean leftclick() {
+            this.visable = true;
+            return false;
         }
     }
     private class Space extends Block {
         public char symbol() {
-            return ' ';
+            if (this.visable) {
+                return '#';
+            } else {
+                return ' ';
+            }
+        }
+        public boolean leftclick() {
+            this.visable = true;
+            return true;
         }
     }
     private class Sign extends Block {
@@ -72,7 +97,15 @@ public class Field {
             this.num = num;
         }
         public char symbol() {
-            return (char)(this.num + '0');
+            if (this.visable) {
+                return (char)(this.num + '0');
+            } else {
+                return ' ';
+            }
+        }
+        public boolean leftclick() {
+            this.visable = true;
+            return true;
         }
     }
 }
