@@ -72,6 +72,9 @@ public class Field {
             this.state = State.Unknow;
         }
         public char symbol() {
+            /* All types of block shared the same symbols for indicating states,
+             * except verified state.
+             */
             switch (this.state) {
                 case Flaged:
                     return 'F';
@@ -84,6 +87,9 @@ public class Field {
             }
         }
         public boolean leftclick() {
+            /* Both of Flaged/Suspected state should protect blocks from
+             * accidentally leftclick.
+             */
             if (this.state == State.Unknow) {
                 this.state = State.Verified;
                 return true;
@@ -91,7 +97,6 @@ public class Field {
             return false;
         }
         public void rightclick() {
-            System.out.println("right click");
             switch (this.state) {
                 case Unknow:
                     this.state = State.Flaged;
@@ -118,12 +123,15 @@ public class Field {
         public boolean leftclick() {
             boolean verified = super.leftclick();
             /* Indicate mission failed only if the leftclick successed
-             * Which means leftclick a unknow mine which are neither 
-             * flaged no suspected
+             * Which means leftclick a unknow mine which are neither
+             * flaged nor suspected.
              */
             return !verified;
         }
     }
+    /* The Space blocks are always away from any mine blocks.
+     * In the other hand, the Space block is Sign block with zero value of "num".
+     */
     private class Space extends Block {
         public char symbol() {
             if (this.state == State.Verified) {
@@ -133,10 +141,16 @@ public class Field {
         }
         public boolean leftclick() {
             super.leftclick();
+            /* leftclick on Space block will always make the game continue. */
             return true;
         }
     }
+    /* The Sign blocks are always near by mine blocks
+     * and indicating how many mine blocks are nearing by.
+     */
     private class Sign extends Block {
+        /* The amount of nearing mine blocks,
+         * the value should be initialized during the construction process. */
         private int num;
         public Sign(int num) {
             this.num = num;
@@ -149,6 +163,7 @@ public class Field {
         }
         public boolean leftclick() {
             super.leftclick();
+            /* leftclick on Sign block will always make the game continue. */
             return true;
         }
     }
