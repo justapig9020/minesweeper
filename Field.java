@@ -5,12 +5,14 @@ public class Field {
     private Block[][] blocks;
     private int safe_amount;
     private int mine_amount;
+    private int flaged_mine_amount;
     private int verified_amount;
     private boolean gameset;
     public Field(int xsize, int ysize, int mine_amount) {
         int total = xsize * ysize;
         this.safe_amount = total - mine_amount;
         this.mine_amount = mine_amount;
+        this.flaged_mine_amount = 0;
         this.verified_amount = 0;
         this.gameset = false;
         this.blocks = new Block[xsize][ysize];
@@ -65,11 +67,15 @@ public class Field {
         return this.gameset;
     }
     public boolean is_win() {
-        return this.verified_amount == this.safe_amount;
+        boolean all_verified = this.verified_amount == this.safe_amount;
+        boolean all_flaged = this.flaged_mine_amount == this.mine_amount;
+        return all_verified || all_flaged;
     }
     public void rightclick(int x, int y) {
         Block block = this.blocks[x][y];
-        block.rightclick();
+        this.flaged_mine_amount += block.rightclick();
+        if (this.flaged_mine_amount == this.mine_amount)
+            this.gameset = true;
     }
     public String render() {
         String ret = "";
@@ -126,21 +132,25 @@ public class Field {
             }
             return false;
         }
-        public void rightclick() {
+        public int rightclick() {
             switch (this.state) {
                 case Unknow:
                     this.state = State.Flaged;
-                    break;
+                    /* Flag a safe block, step away from success.
+                     */
+                    return -1;
                 case Flaged:
                     this.state = State.Suspected;
-                    break;
-                case  Suspected:
+                    /* Unflag a safe block, step forward to success.
+                     */
+                    return 1;
+                case Suspected:
                     this.state = State.Unknow;
                     break;
                 default:
                     break;
             }
-            System.out.println(this.state);
+            return 0;
         }
     }
     private class Mine extends Block {
@@ -157,6 +167,12 @@ public class Field {
              * flaged nor suspected.
              */
             return !verified;
+        }
+        public int rightclick() {
+            /* Only if flaging a mine is step forward to success.
+             */
+            int ret = super.rightclick();
+            return ret * -1;
         }
     }
     /* The Space blocks are always away from any mine blocks.
