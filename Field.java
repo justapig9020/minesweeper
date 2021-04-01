@@ -72,8 +72,10 @@ public class Field {
                 Block next_block = this.blocks[next_x][next_y];
                 if (next_block.try_spread()) {
                     this.verified_amount += 1;
-                    stack[top] = new Node(next_x, next_y);
-                    top += 1;
+                    if (next_block.keep_going()) {
+                        stack[top] = new Node(next_x, next_y);
+                        top += 1;
+                    }
                 }
             }
         }
@@ -231,6 +233,9 @@ public class Field {
             }
             return false;
         }
+        public boolean keep_going() {
+            return false;
+        }
     }
     private class Mine extends Block {
         public char symbol() {
@@ -270,6 +275,9 @@ public class Field {
         public boolean leftclick() {
             super.leftclick();
             /* leftclick on Space block will always make the game continue. */
+            return true;
+        }
+        public boolean keep_going() {
             return true;
         }
     }
