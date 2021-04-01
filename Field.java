@@ -64,9 +64,9 @@ public class Field {
         return ret;
     }
     private enum State {
-        Unknow, Flaged, Doubtful, Verified,
+        Unknow, Flaged, Suspected, Verified,
     }
-    private abstract class Block {
+    private class Block {
         protected State state;
         public Block() {
             this.state = State.Unknow;
@@ -75,7 +75,7 @@ public class Field {
             switch (this.state) {
                 case Flaged:
                     return 'F';
-                case Doubtful:
+                case Suspected:
                     return '?';
                 case Unknow:
                     return ' ';
@@ -83,7 +83,13 @@ public class Field {
                     return ' ';
             }
         }
-        abstract public boolean leftclick();
+        public boolean leftclick() {
+            if (this.state == State.Unknow) {
+                this.state = State.Verified;
+                return true;
+            }
+            return false;
+        }
         public void rightclick() {
             System.out.println("right click");
             switch (this.state) {
@@ -91,9 +97,9 @@ public class Field {
                     this.state = State.Flaged;
                     break;
                 case Flaged:
-                    this.state = State.Doubtful;
+                    this.state = State.Suspected;
                     break;
-                case  Doubtful:
+                case  Suspected:
                     this.state = State.Unknow;
                     break;
                 default:
@@ -110,8 +116,12 @@ public class Field {
             return super.symbol();
         }
         public boolean leftclick() {
-            this.state = State.Verified;
-            return false;
+            boolean verified = super.leftclick();
+            /* Indicate mission failed only if the leftclick successed
+             * Which means leftclick a unknow mine which are neither 
+             * flaged no suspected
+             */
+            return !verified;
         }
     }
     private class Space extends Block {
@@ -122,7 +132,7 @@ public class Field {
             return super.symbol();
         }
         public boolean leftclick() {
-            this.state = State.Verified;
+            super.leftclick();
             return true;
         }
     }
@@ -138,7 +148,7 @@ public class Field {
             return super.symbol();
         }
         public boolean leftclick() {
-            this.state = State.Verified;
+            super.leftclick();
             return true;
         }
     }
