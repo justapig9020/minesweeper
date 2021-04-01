@@ -5,12 +5,17 @@ public class Field {
     private Block[][] blocks;
     private int safe_amount;
     private int mine_amount;
+    private int flaged_mine_amount;
     private int verified_amount;
     private boolean gameset;
+    private int total, xsize, ysize;
     public Field(int xsize, int ysize, int mine_amount) {
-        int total = xsize * ysize;
-        this.safe_amount = total - mine_amount;
+        this.total = xsize * ysize;
+        this.xsize = xsize;
+        this.ysize = ysize;
+        this.safe_amount = this.total - mine_amount;
         this.mine_amount = mine_amount;
+        this.flaged_mine_amount = 0;
         this.verified_amount = 0;
         this.gameset = false;
         this.blocks = new Block[xsize][ysize];
@@ -45,6 +50,34 @@ public class Field {
         this.blocks[4][3] = new Space();
         this.blocks[4][4] = new Space();
     }
+    private boolean valid_coordinate(int x, int y) {
+        boolean x_valid = (x >= 0) && (x < this.xsize);
+        boolean y_valid = (y >= 0) && (y < this.ysize);
+        return x_valid && y_valid;
+    }
+    private void spread(int x, int y) {
+        Node[] stack = new Node[this.total];
+        int top = 0;
+        stack[top] = new Node(x, y);
+        top += 1;
+        while (top > 0) {
+            top -= 1;
+            Node curr = stack[top];
+            while (curr.next_step()) {
+                int next_x = curr.get_x();
+                int next_y = curr.get_y();
+                if (!this.valid_coordinate(next_x, next_y)) {
+                    continue;
+                }
+                Block next_block = this.blocks[next_x][next_y];
+                if (next_block.try_spread()) {
+                    this.verified_amount += 1;
+                    stack[top] = new Node(next_x, next_y);
+                    top += 1;
+                }
+            }
+        }
+    }
     public void leftclick(int x, int y) {
         Block block = this.blocks[x][y];
         if (!block.is_verified()) {
@@ -56,6 +89,7 @@ public class Field {
                 this.gameset = true;
             } else {
                 this.verified_amount += 1;
+                this.spread(x, y);
                 if (this.verified_amount == this.safe_amount)
                     this.gameset = true;
             }
@@ -65,11 +99,15 @@ public class Field {
         return this.gameset;
     }
     public boolean is_win() {
-        return this.verified_amount == this.safe_amount;
+        boolean all_verified = this.verified_amount == this.safe_amount;
+        boolean all_flaged = this.flaged_mine_amount == this.mine_amount;
+        return all_verified || all_flaged;
     }
     public void rightclick(int x, int y) {
         Block block = this.blocks[x][y];
-        block.rightclick();
+        this.flaged_mine_amount += block.rightclick();
+        if (this.flaged_mine_amount == this.mine_amount)
+            this.gameset = true;
     }
     public String render() {
         String ret = "";
@@ -92,6 +130,46 @@ public class Field {
     }
     private enum State {
         Unknow, Flaged, Suspected, Verified,
+    }
+    private class Node {
+        private int orient, x, y, x_off, y_off;
+        public Node(int x, int y) {
+            this.x = x;
+            this.y = y;
+            this.x_off = 0;
+            this.y_off = 0;
+            this.orient = 0;
+        }
+        public boolean next_step() {
+            this.orient += 1;
+            if (this.orient > 4)
+                return false;
+            switch(this.orient) {
+            case 1:
+                this.x_off = 1;
+                this.y_off = 0;
+                break;
+            case 2:
+                this.x_off = 0;
+                this.y_off = 1;
+                break;
+            case 3:
+                this.x_off = -1;
+                this.y_off = 0;
+                break;
+            case 4:
+                this.x_off = 0;
+                this.y_off = -1;
+                break;
+            }
+            return true;
+        }
+        public int get_x() {
+            return this.x + this.x_off;
+        }
+        public int get_y() {
+            return this.y + this.y_off;
+        }
     }
     private class Block {
         protected State state;
@@ -126,21 +204,32 @@ public class Field {
             }
             return false;
         }
-        public void rightclick() {
+        public int rightclick() {
             switch (this.state) {
                 case Unknow:
                     this.state = State.Flaged;
-                    break;
+                    /* Flag a safe block, step away from success.
+                     */
+                    return -1;
                 case Flaged:
                     this.state = State.Suspected;
-                    break;
-                case  Suspected:
+                    /* Unflag a safe block, step forward to success.
+                     */
+                    return 1;
+                case Suspected:
                     this.state = State.Unknow;
                     break;
                 default:
                     break;
             }
-            System.out.println(this.state);
+            return 0;
+        }
+        public boolean try_spread() {
+            if (this.state != State.Verified) {
+                this.state= State.Verified;
+                return true;
+            }
+            return false;
         }
     }
     private class Mine extends Block {
@@ -157,6 +246,15 @@ public class Field {
              * flaged nor suspected.
              */
             return !verified;
+        }
+        public int rightclick() {
+            /* Only if flaging a mine is step forward to success.
+             */
+            int ret = super.rightclick();
+            return ret * -1;
+        }
+        public boolean try_spread() {
+            return false;
         }
     }
     /* The Space blocks are always away from any mine blocks.

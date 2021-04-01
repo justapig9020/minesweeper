@@ -14,7 +14,7 @@ public class Minesweeper {
             x = stdin.nextInt();
             System.out.printf("Y: ");
             y = stdin.nextInt();
-            System.out.println("R/L");
+            System.out.printf("(r)ight click/(l)eft click: ");
             stdin.nextLine();
             cmd = stdin.nextLine();
             if (cmd.charAt(0) == 'r') {
