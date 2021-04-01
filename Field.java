@@ -57,37 +57,49 @@ public class Field {
             System.out.println("+");
         }
     }
+    private enum State {
+        Unknow, Flaged, Doubtful, Verified,
+    }
     private abstract class Block {
-        protected boolean visable;
+        protected State state;
         public Block() {
-            this.visable = false;
+            this.state = State.Unknow;
         }
-        abstract public char symbol();
+        public char symbol() {
+            switch (this.state) {
+                case Flaged:
+                    return 'F';
+                case Doubtful:
+                    return '?';
+                case Unknow:
+                    return ' ';
+                default:
+                    return ' ';
+            }
+        }
         abstract public boolean leftclick();
     }
     private class Mine extends Block {
         public char symbol() {
-            if (this.visable) {
+            if (this.state == State.Verified) {
                 return '*';
-            } else {
-                return ' ';
             }
+            return super.symbol();
         }
         public boolean leftclick() {
-            this.visable = true;
+            this.state = State.Verified;
             return false;
         }
     }
     private class Space extends Block {
         public char symbol() {
-            if (this.visable) {
+            if (this.state == State.Verified) {
                 return '#';
-            } else {
-                return ' ';
             }
+            return super.symbol();
         }
         public boolean leftclick() {
-            this.visable = true;
+            this.state = State.Verified;
             return true;
         }
     }
@@ -97,14 +109,13 @@ public class Field {
             this.num = num;
         }
         public char symbol() {
-            if (this.visable) {
+            if (this.state == State.Verified) {
                 return (char)(this.num + '0');
-            } else {
-                return ' ';
             }
+            return super.symbol();
         }
         public boolean leftclick() {
-            this.visable = true;
+            this.state = State.Verified;
             return true;
         }
     }
