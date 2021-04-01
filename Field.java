@@ -40,7 +40,12 @@ public class Field {
         Block block = this.blocks[x][y];
         return block.leftclick();
     }
-    public void print() {
+    public void rightclick(int x, int y) {
+        Block block = this.blocks[x][y];
+        block.rightclick();
+    }
+    public String render() {
+        String ret = "";
         for(Block[] i: this.blocks) {
             for(Block j: i) {
                 char s;
@@ -48,14 +53,15 @@ public class Field {
                     s = j.symbol();
                 else
                     s = ' ';
-                System.out.printf("|%c", s);
+                ret += "|" + s;
             }
-            System.out.println("|");
+            ret += "|\n";
             for(int j=0; j<i.length; j++) {
-                System.out.printf("+-");
+                ret += "+-";
             }
-            System.out.println("+");
+            ret += "+\n";
         }
+        return ret;
     }
     private enum State {
         Unknow, Flaged, Doubtful, Verified,
@@ -78,6 +84,23 @@ public class Field {
             }
         }
         abstract public boolean leftclick();
+        public void rightclick() {
+            System.out.println("right click");
+            switch (this.state) {
+                case Unknow:
+                    this.state = State.Flaged;
+                    break;
+                case Flaged:
+                    this.state = State.Doubtful;
+                    break;
+                case  Doubtful:
+                    this.state = State.Unknow;
+                    break;
+                default:
+                    break;
+            }
+            System.out.println(this.state);
+        }
     }
     private class Mine extends Block {
         public char symbol() {
