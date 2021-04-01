@@ -111,10 +111,42 @@ public class Field {
         if (this.flaged_mine_amount == this.mine_amount)
             this.gameset = true;
     }
+    public String render_select(int x, int y) {
+        String ret = "";
+        for (int i=0; i<this.ysize; i++) {
+            ret += "+-";
+        }
+        ret += "+\n";
+        for (int i=0; i<this.xsize; i++) {
+            for (int j=0; j<this.ysize; j++) {
+                if (i == x && j == y) {
+                    ret += "|O";
+                    continue;
+                }
+                Block curr = this.blocks[i][j];
+                char s;
+                if (curr != null)
+                    s = curr.symbol();
+                else
+                    s = ' ';
+                ret += "|" + s;
+            }
+            ret += "|\n";
+            for (int j=0; j<this.ysize; j++) {
+                ret += "+-";
+            }
+            ret += "+\n";
+        }
+        return ret;
+    }
     public String render() {
         String ret = "";
-        for(Block[] i: this.blocks) {
-            for(Block j: i) {
+        for (int i=0; i<this.ysize; i++) {
+            ret += "+-";
+        }
+        ret += "+\n";
+        for (Block[] i: this.blocks) {
+            for (Block j: i) {
                 char s;
                 if (j != null)
                     s = j.symbol();
@@ -123,7 +155,7 @@ public class Field {
                 ret += "|" + s;
             }
             ret += "|\n";
-            for(int j=0; j<i.length; j++) {
+            for (int j=0; j<i.length; j++) {
                 ret += "+-";
             }
             ret += "+\n";
