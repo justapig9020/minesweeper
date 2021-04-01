@@ -3,7 +3,7 @@ all: Minesweeper.class
 run: Minesweeper.class
 	@java Minesweeper
 
-Minesweeper.class: Minesweeper.java
+Minesweeper.class: Minesweeper.java Field.java
 	javac Minesweeper.java
 
 clean:
