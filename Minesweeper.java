@@ -2,12 +2,11 @@ import java.util.Scanner;
 
 public class Minesweeper {
     public static void main(String[] args) {
-        Field f = new Field(5, 5);
+        Field f = new Field(5, 5, 2);
         Scanner stdin = new Scanner(System.in);
         String frame;
         String cmd;
         int x, y;
-        boolean unsolve = true;
         do {
             frame = f.render();
             System.out.println(frame);
@@ -21,10 +20,14 @@ public class Minesweeper {
             if (cmd.charAt(0) == 'r') {
                 f.rightclick(x, y);
             } else {
-                unsolve = f.leftclick(x, y);
+                f.leftclick(x, y);
             }
-        } while(unsolve);
+        } while(!f.is_gameset());
         frame = f.render();
         System.out.println(frame);
+        if (f.is_win())
+            System.out.println("You Win!");
+        else
+            System.out.println("You lose!");
     }
 }

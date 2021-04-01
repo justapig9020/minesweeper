@@ -3,7 +3,16 @@ public class Field {
         Mine, Space, Sign
     }
     private Block[][] blocks;
-    public Field(int xsize, int ysize) {
+    private int safe_amount;
+    private int mine_amount;
+    private int verified_amount;
+    private boolean gameset;
+    public Field(int xsize, int ysize, int mine_amount) {
+        int total = xsize * ysize;
+        this.safe_amount = total - mine_amount;
+        this.mine_amount = mine_amount;
+        this.verified_amount = 0;
+        this.gameset = false;
         this.blocks = new Block[xsize][ysize];
 
         this.blocks[0][0] = new Space();
@@ -36,9 +45,27 @@ public class Field {
         this.blocks[4][3] = new Space();
         this.blocks[4][4] = new Space();
     }
-    public boolean leftclick(int x, int y) {
+    public void leftclick(int x, int y) {
         Block block = this.blocks[x][y];
-        return block.leftclick();
+        if (!block.is_verified()) {
+            /* leftclick function return false on the click failed.
+             * Which means the block is mine.
+             */
+            boolean is_mine = !block.leftclick();
+            if (is_mine) {
+                this.gameset = true;
+            } else {
+                this.verified_amount += 1;
+                if (this.verified_amount == this.safe_amount)
+                    this.gameset = true;
+            }
+        }
+    }
+    public boolean is_gameset() {
+        return this.gameset;
+    }
+    public boolean is_win() {
+        return this.verified_amount == this.safe_amount;
     }
     public void rightclick(int x, int y) {
         Block block = this.blocks[x][y];
@@ -85,6 +112,9 @@ public class Field {
                 default:
                     return ' ';
             }
+        }
+        public boolean is_verified() {
+            return this.state == State.Verified;
         }
         public boolean leftclick() {
             /* Both of Flaged/Suspected state should protect blocks from
