@@ -1,7 +1,6 @@
+import java.lang.Math;
+
 public class Field {
-    public enum Type {
-        Mine, Space, Sign
-    }
     private Block[][] blocks;
     private int safe_amount;
     private int mine_amount;
@@ -20,35 +19,44 @@ public class Field {
         this.gameset = false;
         this.blocks = new Block[xsize][ysize];
 
-        this.blocks[0][0] = new Space();
-        this.blocks[0][1] = new Space();
-        this.blocks[0][2] = new Space();
-        this.blocks[0][3] = new Space();
-        this.blocks[0][4] = new Space();
-
-        this.blocks[1][0] = new Space();
-        this.blocks[1][1] = new Sign(1);
-        this.blocks[1][2] = new Sign(1);
-        this.blocks[1][3] = new Sign(1);
-        this.blocks[1][4] = new Space();
-
-        this.blocks[2][0] = new Sign(1);
-        this.blocks[2][1] = new Sign(2);
-        this.blocks[2][2] = new Mine();
-        this.blocks[2][3] = new Sign(1);
-        this.blocks[2][4] = new Space();
-
-        this.blocks[3][0] = new Sign(1);
-        this.blocks[3][1] = new Mine();
-        this.blocks[3][2] = new Sign(2);
-        this.blocks[3][3] = new Sign(1);
-        this.blocks[3][4] = new Space();
-
-        this.blocks[4][0] = new Sign(1);
-        this.blocks[4][1] = new Sign(1);
-        this.blocks[4][2] = new Sign(1);
-        this.blocks[4][3] = new Space();
-        this.blocks[4][4] = new Space();
+        for (int i=0; i<mine_amount; i++) {
+            int x = (int)(Math.random() * xsize);
+            int y = (int)(Math.random() * ysize);
+            Block block = this.blocks[x][y];
+            if (block == null) {
+                block = new Mine();
+            } else {
+                block = block.set_as_mine();
+            }
+            if (block != null) {
+                for (int x_off=-1; x_off<=1; x_off++) {
+                    for (int y_off=-1; y_off<=1; y_off++) {
+                        int curr_x = x + x_off;
+                        int curr_y = y + y_off;
+                        if (x_off == 0 && y_off == 0)
+                            continue;
+                        if (this.valid_coordinate(curr_x, curr_y)) {
+                            Block modify = this.blocks[curr_x][curr_y];
+                            if (modify == null)
+                                this.blocks[curr_x][curr_y] = new Sign(1);
+                            else
+                                modify.add_surrounding_mine();
+                        }
+                    }
+                }
+                this.blocks[x][y] = block;
+            } else {
+                /* Already a mine there. */
+                i -= 1;
+            }
+        }
+        for (int i=0; i<this.xsize; i++) {
+            for (int o=0; o<this.ysize; o++) {
+                Block check = this.blocks[i][o];
+                if (check == null)
+                    this.blocks[i][o] = new Space();
+            }
+        }
     }
     private boolean valid_coordinate(int x, int y) {
         boolean x_valid = (x >= 0) && (x < this.xsize);
@@ -205,7 +213,7 @@ public class Field {
             return this.y + this.y_off;
         }
     }
-    private class Block {
+    private abstract class Block {
         protected State state;
         public Block() {
             this.state = State.Unknow;
@@ -268,6 +276,10 @@ public class Field {
         public boolean keep_going() {
             return false;
         }
+        public Block set_as_mine() {
+            return new Mine();
+        }
+        public void add_surrounding_mine() {}
     }
     private class Mine extends Block {
         public char symbol() {
@@ -292,6 +304,9 @@ public class Field {
         }
         public boolean try_spread() {
             return false;
+        }
+        public Block set_as_mine() {
+            return null;
         }
     }
     /* The Space blocks are always away from any mine blocks.
@@ -333,6 +348,9 @@ public class Field {
             super.leftclick();
             /* leftclick on Sign block will always make the game continue. */
             return true;
+        }
+        public void add_surrounding_mine() {
+            this.num += 1;
         }
     }
 }

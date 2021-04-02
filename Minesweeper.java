@@ -2,7 +2,7 @@ import java.util.Scanner;
 
 public class Minesweeper {
     public static void main(String[] args) {
-        Field f = new Field(5, 5, 2);
+        Field f = new Field(10, 11, 10);
         Scanner stdin = new Scanner(System.in);
         String frame;
         String cmd;
