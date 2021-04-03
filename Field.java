@@ -91,18 +91,17 @@ public class Field {
     public void leftclick(int x, int y) {
         Block block = this.blocks[x][y];
         if (!block.is_verified()) {
-            /* leftclick function return false on the click failed.
-             * Which means the block is mine.
-             */
-            boolean is_mine = !block.leftclick();
-            if (is_mine) {
+            Type type = block.leftclick();
+            switch (type) {
+            case Mine:
                 this.gameset = true;
-            } else {
-                this.verified_amount += 1;
+                return;
+            case Space:
                 this.spread(x, y);
-                if (this.verified_amount == this.safe_amount)
-                    this.gameset = true;
             }
+            this.verified_amount += 1;
+            if (this.verified_amount == this.safe_amount)
+                this.gameset = true;
         }
     }
     public boolean is_gameset() {
@@ -203,6 +202,9 @@ public class Field {
             return this.y + this.y_off;
         }
     }
+    private enum Type {
+        Space, Sign, Mine
+    }
     private abstract class Block {
         protected State state;
         public Block() {
@@ -226,15 +228,15 @@ public class Field {
         public boolean is_verified() {
             return this.state == State.Verified;
         }
-        public boolean leftclick() {
+        public Type leftclick() {
             /* Both of Flaged/Suspected state should protect blocks from
              * accidentally leftclick.
              */
             if (this.state == State.Unknow) {
                 this.state = State.Verified;
-                return true;
+                return null;
             }
-            return false;
+            return null;
         }
         public int rightclick() {
             switch (this.state) {
@@ -278,13 +280,13 @@ public class Field {
             }
             return super.symbol();
         }
-        public boolean leftclick() {
-            boolean verified = super.leftclick();
+        public Type leftclick() {
+            super.leftclick();
             /* Indicate mission failed only if the leftclick successed
              * Which means leftclick a unknow mine which are neither
              * flaged nor suspected.
              */
-            return !verified;
+            return Type.Mine;
         }
         public int rightclick() {
             /* Only if flaging a mine is step forward to success.
@@ -309,10 +311,10 @@ public class Field {
             }
             return super.symbol();
         }
-        public boolean leftclick() {
+        public Type leftclick() {
             super.leftclick();
             /* leftclick on Space block will always make the game continue. */
-            return true;
+            return Type.Space;
         }
         public boolean keep_going() {
             return true;
@@ -334,10 +336,10 @@ public class Field {
             }
             return super.symbol();
         }
-        public boolean leftclick() {
+        public Type leftclick() {
             super.leftclick();
             /* leftclick on Sign block will always make the game continue. */
-            return true;
+            return Type.Sign;
         }
         public void add_surrounding_mine() {
             this.num += 1;
