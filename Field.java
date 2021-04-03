@@ -174,35 +174,25 @@ public class Field {
         Unknow, Flaged, Suspected, Verified,
     }
     private class Node {
-        private int orient, x, y, x_off, y_off;
+        private int x, y, x_off, y_off;
         public Node(int x, int y) {
             this.x = x;
             this.y = y;
-            this.x_off = 0;
-            this.y_off = 0;
-            this.orient = 0;
+            this.x_off = -1;
+            this.y_off = -2;
         }
         public boolean next_step() {
-            this.orient += 1;
-            if (this.orient > 4)
-                return false;
-            switch(this.orient) {
-            case 1:
-                this.x_off = 1;
-                this.y_off = 0;
-                break;
-            case 2:
-                this.x_off = 0;
-                this.y_off = 1;
-                break;
-            case 3:
-                this.x_off = -1;
-                this.y_off = 0;
-                break;
-            case 4:
-                this.x_off = 0;
+            this.y_off += 1;
+            if (this.y_off == 0 && this.x_off == 0)
+                this.y_off += 1;
+
+            if (this.y_off == 2) {
+                this.x_off += 1;
+                if (this.x_off == 2) {
+                    /* Out of range */
+                    return false;
+                }
                 this.y_off = -1;
-                break;
             }
             return true;
         }
